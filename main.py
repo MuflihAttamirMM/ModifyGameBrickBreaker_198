@@ -255,3 +255,9 @@ def main():
             score = 0
             ball.reset()
             listOfBlocks = populateBlocks(blockWidth, blockHeight, horizontalGap, verticalGap)
+
+        # Collision check
+        # -- [UBAH] striker hanya memantulkan bola saat bola bergerak turun (yFac > 0),
+        # -- supaya bola yang sudah besar tidak "nyangkut" dan memantul bolak-balik di striker
+        if collisionChecker(striker.getRect(), ball.getRect()) and ball.yFac > 0:
+            ball.hit()
