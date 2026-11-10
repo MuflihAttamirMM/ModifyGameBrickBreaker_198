@@ -122,12 +122,27 @@ class Ball:
         self.color = color
         self.xFac, self.yFac = 1, -1
 
+        # -- [BARU] muka normal dan muka kaget, di-resize ke diameter bola
+        self.faceNormal = loadFace("face_normal.png", radius * 2)
+        self.faceShock = loadFace("face_shock.png", radius * 2)
+        # -- [BARU] timer muka kaget (0 = muka normal)
+        self.shockTimer = 0
+
     def display(self):
-        pygame.draw.circle(screen, self.color, (int(self.posx), int(self.posy)), self.radius)
+        # -- [UBAH] sebelumnya selalu pygame.draw.circle, sekarang menampilkan gambar muka
+        face = self.faceShock if self.shockTimer > 0 else self.faceNormal
+        if face is not None:
+            screen.blit(face, (int(self.posx - self.radius), int(self.posy - self.radius)))
+        else:
+            pygame.draw.circle(screen, self.color, (int(self.posx), int(self.posy)), self.radius)
 
     def update(self):
         self.posx += self.xFac * self.speed
         self.posy += self.yFac * self.speed
+
+        # -- [BARU] kurangi timer muka kaget tiap frame, kalau habis otomatis balik ke muka normal
+        if self.shockTimer > 0:
+            self.shockTimer -= 1
 
         # Bounce off vertical walls
         if self.posx - self.radius <= 0 or self.posx + self.radius >= WIDTH:
@@ -147,9 +162,14 @@ class Ball:
         self.posx = WIDTH // 2
         self.posy = HEIGHT - 100
         self.xFac, self.yFac = 1, -1
+        self.shockTimer = 0  # -- [BARU] muka kembali normal saat bola di-reset
 
     def hit(self):
         self.yFac *= -1
+
+    # -- [BARU] dipanggil saat bola kena blok: muka jadi kaget
+    def shock(self):
+        self.shockTimer = SHOCK_FRAMES
 
     def getRect(self):
         # MEMPERBAIKI BUG: Membuat bounding Rect yang valid untuk bola
@@ -171,7 +191,7 @@ def populateBlocks(blockWidth, blockHeight, horizontalGap, verticalGap):
     for i in range(10, WIDTH - blockWidth, blockWidth + horizontalGap):
         for j in range(20, HEIGHT // 2, blockHeight + verticalGap):
             listOfBlocks.append(
-                Block(i, j, blockWidth, blockHeight, random.choice([WHITE, GREEN]))
+                Block(i, j, blockWidth, blockHeight, random.choice([WHITE, RED]))
             )
     return listOfBlocks
 
@@ -195,7 +215,11 @@ def main():
     striker = Striker(WIDTH // 2 - 50, HEIGHT - 50, 100, 20, 10, WHITE)
     strikerXFac = 0
 
-    ball = Ball(WIDTH // 2, HEIGHT - 100, 7, 5, WHITE)
+    # -- [UBAH] radius bola dari 7 menjadi BALL_RADIUS (20)
+    ball = Ball(WIDTH // 2, HEIGHT - 100, BALL_RADIUS, 5, WHITE)
+
+    # -- [BARU] sound "uh kaget" yang diputar saat bola kena blok
+    hitSound = loadSound("uh_kaget.wav")
 
     blockWidth, blockHeight = 40, 15
     horizontalGap, verticalGap = 20, 20
@@ -231,43 +255,3 @@ def main():
             score = 0
             ball.reset()
             listOfBlocks = populateBlocks(blockWidth, blockHeight, horizontalGap, verticalGap)
-
-        # Collision check
-        if collisionChecker(striker.getRect(), ball.getRect()):
-            ball.hit()
-
-        for block in listOfBlocks[:]:
-            if collisionChecker(block.getRect(), ball.getRect()):
-                ball.hit()
-                block.hit()
-                if block.getHealth() <= 0:
-                    listOfBlocks.remove(block)
-                    score += 5
-
-        # Updates
-        striker.update(strikerXFac)
-        lifeLost = ball.update()
-
-        if lifeLost:
-            lives -= 1
-            ball.reset()
-
-        # Render UI
-        scoreText = font.render(f"Score : {score}", True, WHITE)
-        livesText = font.render(f"Lives : {lives}", True, WHITE)
-        screen.blit(scoreText, (20, HEIGHT - 25))
-        screen.blit(livesText, (120, HEIGHT - 25))
-
-        # Display objects
-        striker.display()
-        ball.display()
-        for block in listOfBlocks:
-            block.display()
-
-        pygame.display.update()
-        clock.tick(FPS)
-
-
-if __name__ == "__main__":
-    main()
-    pygame.quit()
