@@ -261,3 +261,22 @@ def main():
         # -- supaya bola yang sudah besar tidak "nyangkut" dan memantul bolak-balik di striker
         if collisionChecker(striker.getRect(), ball.getRect()) and ball.yFac > 0:
             ball.hit()
+
+        # -- [UBAH] bola dipantulkan SATU KALI per frame walau menyentuh beberapa blok sekaligus.
+        # -- Sebelumnya tiap blok memanggil ball.hit(), dan karena bola sekarang lebih besar,
+        # -- 2 blok sekaligus akan membatalkan pantulan (bola tembus blok).
+        blockHitThisFrame = False
+        for block in listOfBlocks[:]:
+            if collisionChecker(block.getRect(), ball.getRect()):
+                blockHitThisFrame = True
+                block.hit()
+                if block.getHealth() <= 0:
+                    listOfBlocks.remove(block)
+                    score += 5
+
+            if blockHitThisFrame:
+            ball.hit()
+            ball.shock()  # -- [BARU] muka berubah jadi kaget
+            if hitSound is not None:
+                hitSound.stop()  # -- [BARU] sound diulang dari awal kalau kena blok lagi
+                hitSound.play()  # -- [BARU] putar sound effect
