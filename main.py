@@ -274,7 +274,7 @@ def main():
                     listOfBlocks.remove(block)
                     score += 5
 
-            if blockHitThisFrame:
+        if blockHitThisFrame:
             ball.hit()
             ball.shock()  # -- [BARU] muka berubah jadi kaget
             if hitSound is not None:
