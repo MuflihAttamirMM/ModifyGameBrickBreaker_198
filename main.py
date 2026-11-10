@@ -1,7 +1,15 @@
+import os  # -- [BARU] dipakai untuk membuat path asset yang aman dari folder mana pun game dijalankan
 import pygame
 import random
 
 pygame.init()
+
+# -- [BARU] mixer dibungkus try/except supaya game tetap jalan walau perangkat tidak punya audio
+try:
+    pygame.mixer.init()
+    AUDIO_OK = True
+except pygame.error:
+    AUDIO_OK = False
 
 # Dimensions of the screen
 WIDTH, HEIGHT = 600, 500
@@ -15,11 +23,39 @@ RED = (255, 0, 0)
 font = pygame.font.Font('freesansbold.ttf', 15)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Block Breaker")
+pygame.display.set_caption("Block Breaker - Face Edition")  # -- [UBAH] judul window
 
 # Frame rate control
 clock = pygame.time.Clock()
 FPS = 30
+
+# -- [BARU] lokasi folder assets (gambar muka dan sound effect)
+ASSET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+
+# -- [BARU] radius bola diperbesar dari 7 menjadi 20 supaya muka kelihatan jelas
+BALL_RADIUS = 20
+
+# -- [BARU] lama muka "kaget" tampil setelah kena blok (dalam frame, 8 frame = sekitar 0,27 detik di 30 FPS)
+SHOCK_FRAMES = 8
+
+
+# -- [BARU] fungsi untuk load gambar muka dan di-resize sesuai diameter bola
+def loadFace(filename, size):
+    try:
+        img = pygame.image.load(os.path.join(ASSET_DIR, filename)).convert_alpha()
+        return pygame.transform.smoothscale(img, (size, size))
+    except (pygame.error, FileNotFoundError):
+        return None  # -- fallback: kalau gambar tidak ada, bola digambar sebagai lingkaran biasa
+
+
+# -- [BARU] fungsi untuk load sound effect
+def loadSound(filename):
+    if not AUDIO_OK:
+        return None
+    try:
+        return pygame.mixer.Sound(os.path.join(ASSET_DIR, filename))
+    except (pygame.error, FileNotFoundError):
+        return None  # -- fallback: kalau sound tidak ada, game jalan tanpa suara
 
 
 # Striker class
