@@ -280,3 +280,31 @@ def main():
             if hitSound is not None:
                 hitSound.stop()  # -- [BARU] sound diulang dari awal kalau kena blok lagi
                 hitSound.play()  # -- [BARU] putar sound effect
+
+        # Updates
+        striker.update(strikerXFac)
+        lifeLost = ball.update()
+
+        if lifeLost:
+            lives -= 1
+            ball.reset()
+
+        # Render UI
+        scoreText = font.render(f"Score : {score}", True, WHITE)
+        livesText = font.render(f"Lives : {lives}", True, WHITE)
+        screen.blit(scoreText, (20, HEIGHT - 25))
+        screen.blit(livesText, (120, HEIGHT - 25))
+
+        # Display objects
+        striker.display()
+        ball.display()
+        for block in listOfBlocks:
+            block.display()
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+
+if __name__ == "__main__":
+    main()
+    pygame.quit()
